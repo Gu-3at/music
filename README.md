@@ -39,27 +39,54 @@ pip install pandas scikit-learn matplotlib seaborn
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-# 加载数据集
+# 加载数据
 df = pd.read_csv('nigerian-songs.csv')
 
-# 选择特征
-features = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'tempo']
+# 显示数据的基本信息
+print("数据基本信息：")
+print(df.info())
 
-# 检查缺失值
-missing_values = df[features].isnull().sum()
-print("每个特征的缺失值数量：\n", missing_values)
+# 显示数据的前几行
+print("\n数据的前几行：")
+print(df.head())
 
-# 处理缺失值
-if missing_values.sum() > 0:
-    print("删除包含缺失值的行。")
-    df.dropna(subset=features, inplace=True)
-else:
-    print("未发现缺失值。")
+# 描述性统计分析
+print("\n描述性统计分析：")
+print(df.describe())
 
-# 标准化特征
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df[features])
+# 按艺术家分组，计算每种音乐类型的平均流行度
+print("\n按艺术家分组，计算每种音乐类型的平均流行度：")
+artist_genre_popularity = df.groupby(['artist', 'artist_top_genre'])['popularity'].mean()
+print(artist_genre_popularity)
+
+# 按音乐类型分组，计算每种音乐类型的平均时长
+print("\n按音乐类型分组，计算每种音乐类型的平均时长：")
+genre_length = df.groupby('artist_top_genre')['length'].mean()
+print(genre_length)
+
+# 按年份分组，计算每年发布的歌曲数量
+# 确保 release_date 列是字符串类型
+df['release_date'] = df['release_date'].astype(str)
+year_song_count = df.groupby(df['release_date'].str[:4])['name'].count()
+print("\n按年份分组，计算每年发布的歌曲数量：")
+print(year_song_count)
+
+# 绘制流行度的直方图
+import matplotlib.pyplot as plt
+df['popularity'].plot(kind='hist', bins=20, title='歌曲流行度分布')
+plt.xlabel('流行度')
+plt.ylabel('歌曲数量')
+plt.show()
+
+# 绘制不同音乐类型流行度的箱线图
+df.boxplot(column='popularity', by='artist_top_genre', grid=True, figsize=(12, 8))
+plt.title('不同音乐类型流行度分布')
+plt.xlabel('音乐类型')
+plt.ylabel('流行度')
+plt.suptitle("")  # 隐藏自动生成的标题
+plt.show()
 ```
+
 ## 聚类分析
 确定最佳聚类数
 使用以下两种方法确定最佳聚类数：
@@ -157,6 +184,7 @@ plot_clustering_results(X_tsne, df['KMeans_Cluster'], 'KMeans聚类结果（t-SN
 # 可视化层次聚类结果
 plot_clustering_results(X_tsne, df['Agg_Cluster'], '层次聚类结果（t-SNE可视化）')
 ```
+
 ## 评估
 使用轮廓系数和戴维斯-邦丁指数（Davies-Bouldin Score）评估聚类质量。
 ```python
@@ -209,3 +237,9 @@ df[features].boxplot()
 plt.title('特征箱线图')
 plt.show()
 ```
+### K-means是否对数据归一敏感：
+这个我注意到了。如果数据的尺度不一样，聚类结果可能会受影响。比如，如果一个特征的值特别大，它可能会主导聚类结果。所以，我们可能需要先对数据进行归一化处理。
+### 特征分析：
+我觉得特征分析很重要。我们可以通过相关性分析来找出哪些特征是相关的，然后去掉一些冗余的特征。还有，PCA也是个好方法，可以帮我们降维，同时保留最重要的信息。
+### 理解PCA（主成分分析）：
+PCA它主要是把高维数据降到低维，同时尽量保留数据的变异性。我们先要对数据进行标准化，然后计算协方差矩阵，找出最重要的几个主成分，最后把数据投影到这些主成分上。
